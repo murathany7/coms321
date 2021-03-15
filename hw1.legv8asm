@@ -1,0 +1,48 @@
+main:
+	MOVZ X0, #20, LSL #0
+	BL arraybuilder
+	DUMP
+
+swap: // take in two numbers, swap them
+	SUBI SP, SP, #8		// Make space on stack
+	STUR LR, [SP, #0]	// Store link register
+	
+	LDUR X9, [X1, #0]
+	LDUR X10, [X2, #0]
+	STUR X10, [X1, #0]
+	STUR X9, [X2, #0]
+	
+	LDUR X9, [SP, #0]
+	ADDI SP, SP, #8
+	BR X9
+	
+arraybuilder: // takes in the array length as a param
+	// stack manipulation
+	SUBI SP, SP, #8
+	STUR LR, [SP, #0]
+
+	MOVZ X9, #0, LSL #0
+	MOVZ X10, #0, LSL #0
+	MOVZ X11, #0, LSL #0
+	
+	ADD X9, X9, X0
+	ADDI X10, X10, #90
+	
+	arrayloop:
+		
+		STUR X10, [X11, #0]
+		
+		ADDI X11, X11, #8
+		
+		SUBI X9, X9, #1
+		SUBI X10, X10, #1
+		
+		CBZ X9, arrayend
+		
+		B arrayloop
+	
+	arrayend:
+		LDUR X9, [SP, #0]
+		ADDI SP, SP, #8
+                DUMP
+		BR X9
