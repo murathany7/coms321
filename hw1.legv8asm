@@ -3,9 +3,7 @@ main:
 	BL arraybuilder
 	DUMP
 
-//	MOVZ X1, #200, LSL #0
-//	BL selectionsort
-    B end
+    	B end
 
 swap: // take in two numbers, swap them
 	SUBI SP, SP, #8		// Make space on stack
