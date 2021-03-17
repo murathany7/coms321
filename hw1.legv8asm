@@ -48,5 +48,47 @@ arraybuilder: // takes in the array length as a param
 		ADDI SP, SP, #8
 		BR X9
 
+minindex:
+        // stack manipulation
+        SUBI SP, SP, #8
+        STUR LR, [SP, #0]
+
+        ADDI X10, XZR, #0
+        ADDI X11, XZR, #0
+
+        ADD X10, X10, X0
+        ADD X10, X10, #8 // this is our start address + 1
+        ADD X11, X11, #0 // the last known min index
+
+        min_loop:
+                SUBS X14, X10, X1
+                B.GT min_end
+
+                LDUR X12, [X10, #0]
+                LDUR X13, [X11, #0]
+                SUBS X14, X13, X12
+                B.GT if_less_than
+
+                B if_not_less_than
+
+                if_less_than:
+                        ADDI X11, XZR, #0
+                        ADD X11, X11, X10
+
+                if_not_less_than:
+                        ADDI X10, X10, #8
+                        min_loop
+
+        min_end:
+                // stack manipulation
+                LDUR X9, [SP, #0]
+                ADDI SP, SP, #8
+                ADDI LR, XZR, #0
+                ADD LR, LR, X11
+                BR X9
+
+end:
+    DUMP
+
 end:
 DUMP
