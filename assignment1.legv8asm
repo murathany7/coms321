@@ -67,7 +67,8 @@ minindex: // takes in the size of the array
 
     	ADDI X10, XZR, #0 // array[i]
 	ADDI X10, X1, #0 // offset
-	ADDI X15, XZR, #152
+	LSL X15, X0, #3
+	SUBI X15, X15, #8
 	
 	min_loop:
 		// if we've reached beyond the array
