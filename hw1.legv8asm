@@ -1,9 +1,11 @@
 main:
 	ADDI X0, XZR, #20
 	BL arraybuilder
-	DUMP
 
-    	B end
+	ADDI X0, XZR, #20
+	BL minindex
+	PRNT X11
+    B end
 
 swap: // take in two numbers, swap them
 	SUBI SP, SP, #8		// Make space on stack
@@ -48,47 +50,50 @@ arraybuilder: // takes in the array length as a param
 		ADDI SP, SP, #8
 		BR X9
 
-minindex:
-        // stack manipulation
-        SUBI SP, SP, #8
-        STUR LR, [SP, #0]
+minindex: // takes in the size of the array
 
-        ADDI X10, XZR, #0
-        ADDI X11, XZR, #0
+	// stack manipulation
+	SUBI SP, SP, #8
+	STUR LR, [SP, #0]
 
-        ADD X10, X10, X0
-        ADD X10, X10, #8 // this is our start address + 1
-        ADD X11, X11, #0 // the last known min index
+	// zero out the registers
+	ADDI X9, XZR, #0
+	ADDI X10, XZR, #0
+    ADDI X11, XZR, #0
 
-        min_loop:
-                SUBS X14, X10, X1
-                B.GT min_end
+    ADDI X10, X10, #0 // array[i]
+    ADDI X11, X11, #0
+	ADDI X15, XZR, #0
+	
+	min_loop:
+		// if we've reached beyond the array
+		SUB X9, X0, X15
+		CBZ X9, min_end
+		
+		LDUR X12, [X10, #0] // array[i]
+		LDUR X13, [X11, #0] // array[minindex]
 
-                LDUR X12, [X10, #0]
-                LDUR X13, [X11, #0]
-                SUBS X14, X13, X12
-                B.GT if_less_than
+		SUBS X14, X13, X12
 
-                B if_not_less_than
+		B.GT if_less_than
+		
+		B if_not_less_than
+		
+		if_less_than:
+			ADDI X11, X10, #0
+			
+		if_not_less_than:
+			ADDI X10, X10, #8
+			ADDI X15, X15, #1
+			B min_loop
 
-                if_less_than:
-                        ADDI X11, XZR, #0
-                        ADD X11, X11, X10
-
-                if_not_less_than:
-                        ADDI X10, X10, #8
-                        min_loop
-
-        min_end:
-                // stack manipulation
-                LDUR X9, [SP, #0]
-                ADDI SP, SP, #8
-                ADDI LR, XZR, #0
-                ADD LR, LR, X11
-                BR X9
+	min_end:
+		// stack manipulation
+		LDUR X9, [SP, #0]
+		ADDI SP, SP, #8
+		ADDI LR, XZR, #0
+		ADD LR, LR, X11
+		BR X9
 
 end:
-    DUMP
-
-end:
-DUMP
+	
