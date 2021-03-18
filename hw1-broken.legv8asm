@@ -1,0 +1,119 @@
+main:
+	ADDI X0, XZR, #20
+	BL arraybuilder
+
+	ADDI X0, XZR, #20
+	BL selectionsort
+    B end
+
+swap: // take in two numbers, swap them
+	SUBI SP, SP, #16	// Make space on stack
+	STUR LR, [SP, #0]	// Store link register
+	STUR X19, [SP, #8]
+
+	LDUR X9, [X1, #0]
+	LDUR X10, [X2, #0]
+	STUR X10, [X1, #0]
+	STUR X9, [X2, #0]
+
+	LDUR X9, [SP, #0]
+	LDUR LR, [SP, #8]
+	ADDI SP, SP, #16
+	
+	BR LR
+
+arraybuilder: // takes in the array length as a param
+	// stack manipulation
+	SUBI SP, SP, #8
+	STUR LR, [SP, #0]
+
+	ADDI X9, XZR, #0
+	ADDI X10, XZR, #0
+	ADDI X11, XZR, #0
+
+	ADD X9, X9, X0
+	ADDI X10, X10, #90
+
+	arrayloop:
+
+		STUR X10, [X11, #0]
+
+		ADDI X11, X11, #8
+
+		SUBI X9, X9, #1
+		SUBI X10, X10, #1
+
+		CBZ X9, arrayend
+
+		B arrayloop
+
+	arrayend:
+		LDUR X9, [SP, #0]
+		ADDI SP, SP, #8
+		BR X9
+
+minindex: // takes in the size of the array
+
+	// stack manipulation
+	SUBI SP, SP, #16
+	STUR X19, [SP, #0]
+	STUR LR, [SP, #8]
+
+	PRNT X19
+
+	// zero out the registers
+	ADDI X9, XZR, #0
+    ADDI X11, XZR, #0
+
+    ADD X10, XZR, X19 // array[i]
+    ADDI X11, X11, #0
+	ADDI X15, XZR, #0
+
+	min_loop:
+		// if we've reached beyond the array
+		SUB X9, X0, X15
+		CBZ X9, min_end
+
+		LDUR X12, [X10, #0] // array[i]
+		LDUR X13, [X11, #0] // array[minindex]
+
+		SUBS X14, X13, X12
+
+		B.GT if_less_than
+
+		B if_not_less_than
+
+		if_less_than:
+			ADDI X11, X10, #0
+
+		if_not_less_than:
+			ADDI X10, X10, #8
+			ADDI X15, X15, #1
+			B min_loop
+
+	min_end:
+		// stack manipulation
+		LDUR X19, [SP, #0]
+		LDUR LR, [SP, #8]
+		ADDI SP, SP, #16
+		ADD LR, LR, X11
+		BR X9
+
+
+selectionsort:
+		SUBI SP, SP, #8
+		STUR LR, [SP, #0]
+
+		ADDI X19, XZR, #16
+
+		BL minindex
+
+
+		selection_end:
+			LDUR X9, [SP, #0]
+			ADDI SP, SP, #8
+			ADDI LR, XZR, #0
+			ADD LR, LR, X11
+			BR X9
+end:
+	DUMP
