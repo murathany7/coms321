@@ -4,7 +4,7 @@ main:
 
 	ADDI X0, XZR, #20
 	BL selectionsort
-    B end
+    	B end
 
 swap: // take in two numbers, swap them
 	SUBI SP, SP, #16	// Make space on stack
@@ -55,18 +55,17 @@ arraybuilder: // takes in the array length as a param
 minindex: // takes in the size of the array
 
 	// stack manipulation
-	SUBI SP, SP, #16
-	STUR X19, [SP, #0]
-	STUR LR, [SP, #8]
+	SUBI SP, SP, #8
+	STUR LR, [SP, #0]
 
 	PRNT X19
 
 	// zero out the registers
 	ADDI X9, XZR, #0
-    ADDI X11, XZR, #0
+    	ADDI X11, XZR, #0
 
-    ADD X10, XZR, X19 // array[i]
-    ADDI X11, X11, #0
+    	ADD X10, XZR, X19 // array[i]
+    	ADDI X11, X11, #0
 	ADDI X15, XZR, #0
 
 	min_loop:
@@ -93,7 +92,6 @@ minindex: // takes in the size of the array
 
 	min_end:
 		// stack manipulation
-		LDUR X19, [SP, #0]
 		LDUR LR, [SP, #8]
 		ADDI SP, SP, #16
 		ADD LR, LR, X11
@@ -101,19 +99,19 @@ minindex: // takes in the size of the array
 
 
 selectionsort:
-		SUBI SP, SP, #8
-		STUR LR, [SP, #0]
+	SUBI SP, SP, #8
+	STUR LR, [SP, #0]
 
-		ADDI X19, XZR, #16
+	ADDI X19, XZR, #16
 
-		BL minindex
+	BL minindex
 
 
-		selection_end:
-			LDUR X9, [SP, #0]
-			ADDI SP, SP, #8
-			ADDI LR, XZR, #0
-			ADD LR, LR, X11
-			BR X9
+	selection_end:
+		LDUR X9, [SP, #0]
+		ADDI SP, SP, #8
+		ADDI LR, XZR, #0
+		ADD LR, LR, X11
+		BR X9
 end:
 	DUMP
