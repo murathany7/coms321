@@ -1,4 +1,6 @@
 // Contributors njtucker@iastate.edu jpowell1@iastate.edu kstrozin@iastate.edu murathan@iastate.edu
+// This array uses ASCII characters, and in this case the size of our array is 20
+// This file runs with ./legv8emul assignment1.legv8asm
 
 main:
 	ADDI X0, XZR, #20
