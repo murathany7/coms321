@@ -1,3 +1,5 @@
+import json
+
 file = open('fib.legv8asm.machine', 'rb')
 found_bytes = file.read(4)
 line_count = 1
@@ -8,6 +10,7 @@ branch_conditionals = {0: 'EQ', 1: 'NE', 2: 'HS', 3: 'LO', 4: 'MI', 5: 'PL', 6: 
                        8: 'HI', 9: 'LS', 10: 'GE', 11: 'LT', 12: 'GT', 13: 'LE'}
 
 while found_bytes:
+    print(branch_targets)
     i = int.from_bytes(found_bytes, byteorder='big')
     instruction = '{:032b}'.format(i)
     if instruction.startswith('10001011000'):
@@ -34,41 +37,40 @@ while found_bytes:
         Imm = int(instruction[10:22], 2)
         instructions.append(f'ADDI X{Rd}, X{Rn}, #{Imm}')
 
-    elif instruction.startswith('000101'):
-        br_addr = int(instruction[6:32], 2)
-
-        if not any(branch.get(line_count + br_addr) for branch in branch_targets):
-            print('BL CALLED AND NO DICT WAS FOUND, ADDING')
-            branch_targets.append({line_count + br_addr: f'$procedure{len(branch_targets) + 1}'})
-
-        instructions.append(f'BL {[b.values() for b in branch_targets if b.keys() is line_count + br_addr]}')
-
     elif instruction.startswith('01010100'):
         Rt = int(instruction[27:32], 2)
         br_addr = int(instruction[9:27], 2)
 
         if not any(branch.get(line_count + br_addr) for branch in branch_targets):
-            print('BR CALLED AND NO DICT WAS FOUND, ADDING')
+            print(f'FOUND A NEW BRANCH TARGET IN BR AT LINE {line_count} called {br_addr + line_count}')
             branch_targets.append({line_count + br_addr: f'$procedure{len(branch_targets) + 1}'})
+        else:
+            print(f'WE KNOW THIS BRANCH ALREADY, IT IS {[branch.get(line_count + br_addr) for branch in branch_targets]}')
 
         cond = branch_conditionals[Rt]
-        instructions.append(f'BL {[b.values() for b in branch_targets if b.keys() is line_count + br_addr]}')
+        instructions.append(f'BR {[b.get(line_count + br_addr) for b in branch_targets if b.keys() is line_count + br_addr]}')
 
     elif instruction.startswith('000101'):
         br_addr = int(instruction[6:32], 2)
 
         if not any(branch.get(line_count + br_addr) for branch in branch_targets):
+            print(f'FOUND A NEW BRANCH TARGET IN B AT LINE {line_count} called {br_addr + line_count}')
             branch_targets.append({line_count + br_addr: f'$procedure{len(branch_targets) + 1}'})
+        else:
+            print(f'WE KNOW THIS BRANCH ALREADY, IT IS {[branch.get(line_count + br_addr) for branch in branch_targets]}')
 
-        instructions.append(f'B {[b.values() for b in branch_targets if b.keys() is line_count + br_addr]}')
+        instructions.append(f'B {[b.get(line_count + br_addr) for b in branch_targets if b.keys() is line_count + br_addr]}')
 
     elif instruction.startswith('100101'):
         br_addr = int(instruction[6:32], 2)
 
         if not any(branch.get(line_count + br_addr) for branch in branch_targets):
+            print(f'FOUND A NEW BRANCH TARGET IN BL AT LINE {line_count} called {br_addr + line_count}')
             branch_targets.append({line_count + br_addr: f'$procedure{len(branch_targets) + 1}'})
+        else:
+            print(f'WE KNOW THIS BRANCH ALREADY, IT IS {[branch.get(line_count + br_addr) for branch in branch_targets]}')
 
-        instructions.append(f'BL {[b.values() for b in branch_targets if b.keys() is line_count + br_addr]}')
+        instructions.append(f'BL {[b.get(line_count + br_addr) for b in branch_targets if b.keys() is line_count + br_addr]}')
 
     elif instruction.startswith('11010110000'):
         Rn = int(instruction[22:27], 2)
@@ -80,18 +82,24 @@ while found_bytes:
         Rt = int(instruction[27:32], 2)
 
         if not any(branch.get(line_count + br_addr) for branch in branch_targets):
+            print(f'FOUND A NEW BRANCH TARGET IN CBNZ AT LINE {line_count}')
             branch_targets.append({line_count + br_addr: f'$procedure{len(branch_targets) + 1}'})
+        else:
+            print(f'WE KNOW THIS BRANCH ALREADY, IT IS {[branch.get(line_count + br_addr) for branch in branch_targets]}')
 
-        instructions.append(f'CBNZ {[b.values() for b in branch_targets if b.keys() is line_count + br_addr]}')
+        instructions.append(f'CBNZ {[b.get(line_count + br_addr) for b in branch_targets if b.keys() is line_count + br_addr]}')
 
     elif instruction.startswith('10110100'):
         br_addr = int(instruction[8:28])
         Rt = int(instruction[27:32], 2)
 
         if not any(branch.get(line_count + br_addr) for branch in branch_targets):
+            print(f'FOUND A NEW BRANCH TARGET IN CBZ AT LINE {line_count}')
             branch_targets.append({line_count + br_addr: f'$procedure{len(branch_targets) + 1}'})
+        else:
+            print(f'WE KNOW THIS BRANCH ALREADY, IT IS {[branch.get(line_count + br_addr) for branch in branch_targets]}')
 
-        instructions.append(f'CBZ {[b.values() for b in branch_targets if b.keys() is line_count + br_addr]}')
+        instructions.append(f'CBZ {[b.get(line_count + br_addr) for b in branch_targets if b.keys() is line_count + br_addr]}')
 
     elif instruction.startswith('11001010000'):
         Rm = int(instruction[11:16], 2)
@@ -176,4 +184,4 @@ while found_bytes:
     line_count += 1
 
 
-print(*instructions, sep='\n')
+# print(*instructions, sep='\n')
