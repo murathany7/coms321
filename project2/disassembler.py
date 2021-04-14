@@ -1,4 +1,4 @@
-file = open('file.machine', 'rb')
+file = open('fib.legv8asm.machine', 'rb')
 found_bytes = file.read(4)
 line_count = 1
 branch_targets = []
@@ -37,36 +37,38 @@ while found_bytes:
     elif instruction.startswith('000101'):
         br_addr = int(instruction[6:32], 2)
 
-        if branch_targets[line_count + br_addr] is None:
+        if not any(branch.get(line_count + br_addr) for branch in branch_targets):
+            print('BL CALLED AND NO DICT WAS FOUND, ADDING')
             branch_targets.append({line_count + br_addr: f'$procedure{len(branch_targets) + 1}'})
 
-        instructions.append(f'B {branch_targets[line_count + br_addr]}')
+        instructions.append(f'BL {[b.values() for b in branch_targets if b.keys() is line_count + br_addr]}')
 
     elif instruction.startswith('01010100'):
         Rt = int(instruction[27:32], 2)
         br_addr = int(instruction[9:27], 2)
 
-        if branch_targets[line_count + br_addr] is None:
+        if not any(branch.get(line_count + br_addr) for branch in branch_targets):
+            print('BR CALLED AND NO DICT WAS FOUND, ADDING')
             branch_targets.append({line_count + br_addr: f'$procedure{len(branch_targets) + 1}'})
 
         cond = branch_conditionals[Rt]
-        instructions.append(f'B.{cond} {branch_targets[line_count + br_addr]}')
+        instructions.append(f'BL {[b.values() for b in branch_targets if b.keys() is line_count + br_addr]}')
 
     elif instruction.startswith('000101'):
         br_addr = int(instruction[6:32], 2)
 
-        if branch_targets[line_count + br_addr] is None:
+        if not any(branch.get(line_count + br_addr) for branch in branch_targets):
             branch_targets.append({line_count + br_addr: f'$procedure{len(branch_targets) + 1}'})
 
-        instructions.append(f'B {branch_targets[line_count + br_addr]}')
+        instructions.append(f'B {[b.values() for b in branch_targets if b.keys() is line_count + br_addr]}')
 
     elif instruction.startswith('100101'):
         br_addr = int(instruction[6:32], 2)
 
-        if branch_targets[line_count + br_addr] is None:
+        if not any(branch.get(line_count + br_addr) for branch in branch_targets):
             branch_targets.append({line_count + br_addr: f'$procedure{len(branch_targets) + 1}'})
 
-        instructions.append(f'BL {branch_targets[line_count + br_addr]}')
+        instructions.append(f'BL {[b.values() for b in branch_targets if b.keys() is line_count + br_addr]}')
 
     elif instruction.startswith('11010110000'):
         Rn = int(instruction[22:27], 2)
@@ -77,19 +79,19 @@ while found_bytes:
         br_addr = int(instruction[8:28])
         Rt = int(instruction[27:32], 2)
 
-        if branch_targets[line_count + br_addr] is None:
+        if not any(branch.get(line_count + br_addr) for branch in branch_targets):
             branch_targets.append({line_count + br_addr: f'$procedure{len(branch_targets) + 1}'})
 
-        instructions.append(f'CBNZ {branch_targets[line_count + br_addr]}, X{Rt}')
+        instructions.append(f'CBNZ {[b.values() for b in branch_targets if b.keys() is line_count + br_addr]}')
 
     elif instruction.startswith('10110100'):
         br_addr = int(instruction[8:28])
         Rt = int(instruction[27:32], 2)
 
-        if branch_targets[line_count + br_addr] is None:
+        if not any(branch.get(line_count + br_addr) for branch in branch_targets):
             branch_targets.append({line_count + br_addr: f'$procedure{len(branch_targets) + 1}'})
 
-        instructions.append(f'CBZ {branch_targets[line_count + br_addr]}, X{Rt}')
+        instructions.append(f'CBZ {[b.values() for b in branch_targets if b.keys() is line_count + br_addr]}')
 
     elif instruction.startswith('11001010000'):
         Rm = int(instruction[11:16], 2)
