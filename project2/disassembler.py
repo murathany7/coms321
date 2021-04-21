@@ -1,3 +1,5 @@
+import math
+
 file = open('fib.legv8asm.machine', 'rb')
 found_bytes = file.read(4)
 line_count = 1
@@ -37,6 +39,8 @@ while found_bytes:
     elif instruction.startswith('01010100'):
         Rt = int(instruction[27:32], 2)
         br_addr = int(instruction[9:27], 2)
+        if (br_addr & (1 << (26 - 1))) != 0:
+            br_addr = br_addr - (1 << 26)
 
         if not any(branch.get(line_count + br_addr) for branch in branch_targets):
             print(f'FOUND A NEW BRANCH TARGET IN B COND AT LINE {line_count} called {br_addr + line_count}')
@@ -51,6 +55,8 @@ while found_bytes:
 
     elif instruction.startswith('000101'):
         br_addr = int(instruction[6:32], 2)
+        if (br_addr & (1 << (26 - 1))) != 0:
+            br_addr = br_addr - (1 << 26)
 
         if not any(branch.get(line_count + br_addr) for branch in branch_targets):
             print(f'FOUND A NEW BRANCH TARGET IN B AT LINE {line_count} called {br_addr + line_count}')
@@ -63,6 +69,8 @@ while found_bytes:
 
     elif instruction.startswith('100101'):
         br_addr = int(instruction[6:32], 2)
+        if (br_addr & (1 << (26 - 1))) != 0:
+            br_addr = br_addr - (1 << 26)
 
         if not any(branch.get(line_count + br_addr) for branch in branch_targets):
             print(f'FOUND A NEW BRANCH TARGET IN BL AT LINE {line_count} called {br_addr + line_count}')
@@ -79,7 +87,9 @@ while found_bytes:
         instructions.append(f'    BR X{Rn}')
 
     elif instruction.startswith('10110101'):
-        br_addr = int(instruction[8:28])
+        br_addr = int(instruction[8:28], 2)
+        if (br_addr & (1 << (20 - 1))) != 0:
+            br_addr = br_addr - (1 << 20)
         Rt = int(instruction[27:32], 2)
 
         print(f'CBNZ OP CODE IS {instruction[0:8]} AND BRANCH ADDRESS IS {br_addr}')
@@ -94,7 +104,9 @@ while found_bytes:
                     instructions.append(f'    CBNZ X{Rt} {target[key]}')
 
     elif instruction.startswith('10110100'):
-        br_addr = int(instruction[8:28])
+        br_addr = int(instruction[8:28], 2)
+        if (br_addr & (1 << (20 - 1))) != 0:
+            br_addr = br_addr - (1 << 20)
         Rt = int(instruction[27:32], 2)
 
         print(f'CBZ OP CODE IS {instruction[0:8]} AND BRANCH ADDRESS IS {br_addr}')
@@ -123,15 +135,26 @@ while found_bytes:
     elif instruction.startswith('11111000010'):
         Rn = int(instruction[22:27], 2)
         Rt = int(instruction[27:32], 2)
-        dt_addr = int(instruction[11:20])
+        dt_addr = instruction[11:20]
+        if "1" in dt_addr:
+            dt_addr = math.pow(2,abs(dt_addr.index("1") - len(dt_addr))-1)
+        dt_addr = int(dt_addr)
+        
         instructions.append(f'    LDUR X{Rn}, [X{Rt}, #{dt_addr}]')
     # TODO LSL
-    # TODO LSR
-    elif instruction.startswith('10101010000'):
-        Rm = int(instruction[11:16], 2)
+    elif instruction.startswith("11010011011"):
         Rn = int(instruction[22:27], 2)
         Rd = int(instruction[27:32], 2)
-        instructions.append(f'    ORR X{Rd}, X{Rn}, X{Rm}')
+        Imm = int(instruction[11:22], 2)
+
+        instructions.append(f'    LSL X{Rd}, X{Rn}, #{Imm}')
+    # TODO LSR
+    elif instruction.startswith("11010011010"):
+        Rn = int(instruction[22:27], 2)
+        Rd = int(instruction[27:32], 2)
+        Imm = int(instruction[11:22], 2)
+
+        instructions.append(f'    LSR X{Rd}, X{Rn}, #{Imm}')
 
     elif instruction.startswith('1011001000'):
         Rn = int(instruction[22:27], 2)
@@ -142,7 +165,11 @@ while found_bytes:
     elif instruction.startswith('11111000000'):
         Rn = int(instruction[22:27], 2)
         Rt = int(instruction[27:32], 2)
-        dt_addr = int(instruction[11:20])
+        dt_addr = instruction[11:20]
+        if "1" in dt_addr:
+            dt_addr = math.pow(2,abs(dt_addr.index("1") - len(dt_addr))-1)
+        dt_addr = int(dt_addr)
+        
         instructions.append(f'    STUR X{Rn}, [X{Rt}, #{dt_addr}]')
 
     elif instruction.startswith('11001011000'):
