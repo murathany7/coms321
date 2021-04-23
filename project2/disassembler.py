@@ -1,6 +1,9 @@
 import math
+import sys
 
-file = open('fib.legv8asm.machine', 'rb')
+file = open(sys.argv[1], 'rb')
+outfile = open(sys.argv[1].replace('.machine',''), 'w+')
+
 found_bytes = file.read(4)
 line_count = 1
 branch_targets = []
@@ -43,7 +46,7 @@ while found_bytes:
             br_addr = br_addr - (1 << 26)
 
         if not any(branch.get(line_count + br_addr) for branch in branch_targets):
-            print(f'FOUND A NEW BRANCH TARGET IN B COND AT LINE {line_count} called {br_addr + line_count}')
+            # print(f'FOUND A NEW BRANCH TARGET IN B COND AT LINE {line_count} called {br_addr + line_count}')
             branch_targets.append({line_count + br_addr: f'$procedure{len(branch_targets) + 1}'})
 
         cond = branch_conditionals[Rt]
@@ -59,7 +62,7 @@ while found_bytes:
             br_addr = br_addr - (1 << 26)
 
         if not any(branch.get(line_count + br_addr) for branch in branch_targets):
-            print(f'FOUND A NEW BRANCH TARGET IN B AT LINE {line_count} called {br_addr + line_count}')
+            # print(f'FOUND A NEW BRANCH TARGET IN B AT LINE {line_count} called {br_addr + line_count}')
             branch_targets.append({line_count + br_addr: f'$procedure{len(branch_targets) + 1}'})
 
         for target in branch_targets:
@@ -73,7 +76,7 @@ while found_bytes:
             br_addr = br_addr - (1 << 26)
 
         if not any(branch.get(line_count + br_addr) for branch in branch_targets):
-            print(f'FOUND A NEW BRANCH TARGET IN BL AT LINE {line_count} called {br_addr + line_count}')
+            # print(f'FOUND A NEW BRANCH TARGET IN BL AT LINE {line_count} called {br_addr + line_count}')
             branch_targets.append({line_count + br_addr: f'$procedure{len(branch_targets) + 1}'})
 
         for target in branch_targets:
@@ -83,7 +86,6 @@ while found_bytes:
 
     elif instruction.startswith('11010110000'):
         Rn = int(instruction[22:27], 2)
-        # TODO not sure how to handle this, need to RTFM
         instructions.append(f'    BR X{Rn}')
 
     elif instruction.startswith('10110101'):
@@ -92,10 +94,10 @@ while found_bytes:
             br_addr = br_addr - (1 << 20)
         Rt = int(instruction[27:32], 2)
 
-        print(f'CBNZ OP CODE IS {instruction[0:8]} AND BRANCH ADDRESS IS {br_addr}')
+        # print(f'CBNZ OP CODE IS {instruction[0:8]} AND BRANCH ADDRESS IS {br_addr}')
 
         if not any(branch.get(line_count + br_addr) for branch in branch_targets):
-            print(f'FOUND A NEW BRANCH TARGET IN CBNZ AT LINE {line_count} CALLED {br_addr}')
+            # print(f'FOUND A NEW BRANCH TARGET IN CBNZ AT LINE {line_count} CALLED {br_addr}')
             branch_targets.append({line_count + br_addr: f'$procedure{len(branch_targets) + 1}'})
 
         for target in branch_targets:
@@ -109,10 +111,10 @@ while found_bytes:
             br_addr = br_addr - (1 << 20)
         Rt = int(instruction[27:32], 2)
 
-        print(f'CBZ OP CODE IS {instruction[0:8]} AND BRANCH ADDRESS IS {br_addr}')
+        # print(f'CBZ OP CODE IS {instruction[0:8]} AND BRANCH ADDRESS IS {br_addr}')
 
         if not any(branch.get(line_count + br_addr) for branch in branch_targets):
-            print(f'FOUND A NEW BRANCH TARGET IN CBZ AT LINE {line_count} CALLED {br_addr}')
+            # print(f'FOUND A NEW BRANCH TARGET IN CBZ AT LINE {line_count} CALLED {br_addr}')
             branch_targets.append({line_count + br_addr: f'$procedure{len(branch_targets) + 1}'})
 
         for target in branch_targets:
@@ -137,23 +139,21 @@ while found_bytes:
         Rt = int(instruction[27:32], 2)
         dt_addr = instruction[11:20]
         if "1" in dt_addr:
-            dt_addr = math.pow(2,abs(dt_addr.index("1") - len(dt_addr))-1)
+            dt_addr = math.pow(2, abs(dt_addr.index("1") - len(dt_addr))-1)
         dt_addr = int(dt_addr)
         
         instructions.append(f'    LDUR X{Rn}, [X{Rt}, #{dt_addr}]')
-    # TODO LSL
+
     elif instruction.startswith("11010011011"):
         Rn = int(instruction[22:27], 2)
         Rd = int(instruction[27:32], 2)
-        Imm = int(instruction[11:22], 2)
-
+        Imm = int(instruction[10:22], 2)
         instructions.append(f'    LSL X{Rd}, X{Rn}, #{Imm}')
-    # TODO LSR
+
     elif instruction.startswith("11010011010"):
         Rn = int(instruction[22:27], 2)
         Rd = int(instruction[27:32], 2)
-        Imm = int(instruction[11:22], 2)
-
+        Imm = int(instruction[10:22], 2)
         instructions.append(f'    LSR X{Rd}, X{Rn}, #{Imm}')
 
     elif instruction.startswith('1011001000'):
@@ -167,7 +167,7 @@ while found_bytes:
         Rt = int(instruction[27:32], 2)
         dt_addr = instruction[11:20]
         if "1" in dt_addr:
-            dt_addr = math.pow(2,abs(dt_addr.index("1") - len(dt_addr))-1)
+            dt_addr = math.pow(2, abs(dt_addr.index("1") - len(dt_addr))-1)
         dt_addr = int(dt_addr)
         
         instructions.append(f'    STUR X{Rn}, [X{Rt}, #{dt_addr}]')
@@ -223,4 +223,4 @@ for target in branch_targets:
         instructions.insert(key - 1, f'{target.get(key)}:')
 
 
-print(*instructions, sep='\n')
+outfile.writelines("%s\n" % line for line in instructions)
